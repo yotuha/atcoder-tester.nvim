@@ -83,13 +83,14 @@ class Main(object):
             self.correct_num = 0
             self.update_correct()
             if win_id == -1:
-                self.vim.command('let g:AtcoderTester_win = nvim_open_win(g:AtcoderTester_buf, 1, {})'.format(self.opts))
+                self.vim.command('let g:AtcoderTester_win = nvim_open_win(g:AtcoderTester_buf, v:true, {})'.format(self.opts))
             else:
                 self.vim.command('call win_gotoid(g:AtcoderTester_win)')
             self.test_code(samples)
             self.running = False
         except:
+            win_id = self.vim.eval('bufwinid(g:AtcoderTester_buf)')
             if win_id != -1:
-                self.vim.command('call nvim_close_win(g:AtcoderTester_win)')
+                self.vim.command('call nvim_win_close(g:AtcoderTester_win, v:true)')
             self.vim.command('echo "do() failed"')
             self.running = False
