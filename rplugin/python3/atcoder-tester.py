@@ -39,6 +39,10 @@ class Main(object):
     def update_correct(self):
         buf_str = 'Correct: {} / {}'.format(self.correct_num, self.sample_num)
         self.vim.command('call nvim_buf_set_lines(g:AtcoderTester_buf, 0, 1, v:true, ["{}"])'.format(buf_str))
+        if self.correct_num == self.sample_num:
+            self.vim.command('call nvim_buf_add_highlight(g:AtcoderTester_buf, 0, "PmenuSel", 0, 0, -1)')
+        else:
+            self.vim.command('call nvim_buf_add_highlight(g:AtcoderTester_buf, 0, "IncSearch", 0, 0, -1)')
 
 
     def check_correct(self, ans1, ans2):
@@ -47,6 +51,12 @@ class Main(object):
         if ans1 == ans2:
             self.correct_num += 1
             self.update_correct()
+
+
+    def insert_sample_string_to_buffer(self, string):
+        line_num = self.vim.eval('nvim_buf_line_count(g:AtcoderTester_buf)')
+        self.vim.command('call nvim_buf_set_lines(g:AtcoderTester_buf, -1, -1, v:true, {})'.format(json.dumps(string.split('\n'))))
+        self.vim.command('call nvim_buf_add_highlight(g:AtcoderTester_buf, 0, "LineNr", {}, 0, -1)'.format(line_num))
 
 
     def test_code(self, samples):
@@ -61,11 +71,12 @@ class Main(object):
                     )
             res = process.communicate()[0].decode('utf-8')
             self.check_correct(res, sample[1])
-            buf_str = 'IN:\n{}'.format(sample[0])
-            buf_str += 'OUT:\n{}'.format(res)
-            buf_str += 'ANS:\n{}\n'.format(sample[1])
-            buf_str = buf_str.replace('\r', '')
-            self.vim.command('call nvim_buf_set_lines(g:AtcoderTester_buf, -1, -1, v:true, {})'.format(json.dumps(buf_str.split('\n'))))
+            buf_strs = [''] * 3
+            buf_strs[0] = 'IN:\n{}'.format(sample[0]).replace('\r', '')
+            buf_strs[1] = 'OUT:\n{}'.format(res).replace('\r', '')
+            buf_strs[2] = 'ANS:\n{}\n'.format(sample[1]).replace('\r', '')
+            for string in buf_strs:
+                self.insert_sample_string_to_buffer(string)
 
 
     @neovim.function('AtcoderTester_run', eval='expand("%")')
